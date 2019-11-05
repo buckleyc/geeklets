@@ -24,7 +24,7 @@ from sty import fg, bg, ef, rs
 import pexpect
 
 # Owned
-#from {path} import {class}
+# from {path} import {class}
 
 __author__ = "Buckley Collum"
 __copyright__ = "Copyright 2019, QuoinWorks"
@@ -35,12 +35,12 @@ __maintainer__ = "Buckley Collum"
 __email__ = "buckleycollum@gmail.com"
 __status__ = "Dev"
 
-
 LOCALHOST = socket.gethostname()
 logfile: str = '/var/tmp/geektool_LocateMe.txt'
 pattern = "\<([+-]?[\d.]+),([+-]?[\d.]+)\>\s+\+\/\-\s([\d.]+m)\s\(.*\)\s\@\s([\d\/]+),\s([\d:]+ [AP]M)\s([\w ]+)"
 port = {"lpss-serial1": "LPSS Serial Adapter (1)", "lpss-serial2": "LPSS Serial Adapter (2)", "fw0": "Display Firewire",
-        "en0": "Wi-Fi", "en1": "Thunderbolt 1", "en2": "Thunderbolt 1", "en3": "Thunderbolt 13", "en4": "Thunderbolt 14",
+        "en0": "Wi-Fi", "en1": "Thunderbolt 1", "en2": "Thunderbolt 1", "en3": "Thunderbolt 13",
+        "en4": "Thunderbolt 14",
         "en6": "Bluetooth PAN", "en9": "Display Ethernet", "bridge0": "Thunderbolt Bridge", "lo0": "loopback",
         "ppp0": "VPN",
         "utun0": "Back To My Mac", "utun1": "Back To My Mac"}
@@ -48,7 +48,7 @@ port_len = max((len(v)) for k, v in port.items())
 
 location = {"Home": ('Home', 'SoCal', 34.0373, -118.3677, 'America/Los_Angeles', 100),
             "Studio": ('Studio', 'SoCal', 34.0373, -118.3677, 'America/Los_Angeles', 100)
-           }
+            }
 active_ip = {}
 
 
@@ -113,7 +113,7 @@ def touch(fname, times=None):
 def active():
     import netifaces
     for interface in netifaces.interfaces():
-        #print interface
+        # print interface
         addresses = netifaces.ifaddresses(interface)
         if netifaces.AF_INET not in addresses:
             continue
@@ -128,7 +128,7 @@ def active():
                     # print(interface, address[x])
     # print(active_ip)
     # for k,v in active_ip.iteritems(): print(k,v)
-    port_len = max((len(port[k])) for k,v in active_ip.items())
+    port_len = max((len(port[k])) for k, v in active_ip.items())
     # print(f"port_len is {port_len}")
     primary = netifaces.gateways()['default'][netifaces.AF_INET][1]
     # print(f"primary gateway is {primary}")
@@ -162,7 +162,7 @@ def getLatLong(locateMeStr):
     for line in iter(str(locateMeStr).splitlines()):
         match = re.search(pattern, line)
         if match:
-            new_line = match.group() #+ '\n'
+            new_line = match.group()  # + '\n'
             latitude = float(match.group(1))
             longitude = float(match.group(2))
             return latitude, longitude
@@ -172,7 +172,7 @@ def getLatLong(locateMeStr):
 
 def getAddress(latitude, longitude):
     import geocoder
-    g = geocoder.google([latitude,longitude], method='reverse')
+    g = geocoder.geocodefarm([latitude, longitude], method='reverse')
     return g.address
 
 
@@ -184,10 +184,10 @@ def isclose(a, b, rel_tol=0.0005, abs_tol=0.0):
         0.0001          0° 00′ 0.36″	individual street, land parcel	            11.132 m	10.247 m
     So, the default of 0.0005 is about 50 meters.
     """
-    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+    return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
-def magicHours(lat, lon):
+def magichours(lat, lon):
     import astral
     magicHour = {'golden': [], 'blue': []}
     l = astral.Location(('Studio', 'SoCal', lat, lon, 'US/Pacific', 100))
@@ -199,23 +199,25 @@ def magicHours(lat, lon):
         start, end = l.blue_hour(direction)
         magicHour['blue'].append(start)
         magicHour['blue'].append(end)
-
-    print(ef.italic + "Dawn : %s %s %s %s" + rs.italic %
+    # print(magicHour)
+    print(ef.italic +
+          "Dawn : %s %s %s %s" %
           (
-            fg.blue + magicHour['blue'][0].strftime("%H:%M:%S") + rs.fg,
-            fg.yellow + magicHour['golden'][0].strftime("%H:%M:%S") + rs.fg,
-            fg.red + l.sunrise().strftime("%H:%M:%S") + rs.fg,
-            fg.yellow + magicHour['golden'][1].strftime("%H:%M:%S") + rs.fg
+              fg.blue + magicHour['blue'][0].strftime("%H:%M:%S") + rs.fg,
+              fg.yellow + magicHour['golden'][0].strftime("%H:%M:%S") + rs.fg,
+              fg.red + l.sunrise().strftime("%H:%M:%S") + rs.fg,
+              fg.yellow + magicHour['golden'][1].strftime("%H:%M:%S") + rs.fg
           )
-        )
+          + rs.italic
+          )
     print("Dusk  : %s %s %s %s" %
           (
-            fg.yellow + magicHour['golden'][2].strftime("%H:%M:%S") + rs.fg,
-            fg.red + l.sunset().strftime("%H:%M:%S") + rs.fg,
-            fg.yellow + magicHour['golden'][3].strftime("%H:%M:%S") + rs.fg,
-            fg.blue + magicHour['blue'][3].strftime("%H:%M:%S") + rs.fg
+              fg.yellow + magicHour['golden'][2].strftime("%H:%M:%S") + rs.fg,
+              fg.red + l.sunset().strftime("%H:%M:%S") + rs.fg,
+              fg.yellow + magicHour['golden'][3].strftime("%H:%M:%S") + rs.fg,
+              fg.blue + magicHour['blue'][3].strftime("%H:%M:%S") + rs.fg
           )
-        )
+          )
 
 
 def main():
@@ -228,14 +230,23 @@ def main():
         print(fg.green + ef.bold + ef.underl + "Online" + rs.fg + rs.underl + rs.bold_dim)
         port_len = active()
         locationChanged = True
-    #    myips = _load_ips_netifaces()
-    #    for ip in myips:
-    #        print(u" Ethernet IP : %s" % (ip))
+        #    myips = _load_ips_netifaces()
+        #    for ip in myips:
+        #        print(u" Ethernet IP : %s" % (ip))
 
         LocateMeCmd = '/Users/buckley/bin/LocateMe'
-        locateMeStr = str(subprocess.check_output(LocateMeCmd))
-        #print p
-        #<+34.01765757,-118.48244492> +/- 65.00m (speed -1.00 mps / course -1.00) @ 6/7/17, 10:47:33 AM Pacific Daylight Time
+        try:
+            locateMeStr = subprocess.run(LocateMeCmd, encoding='utf-8',
+                                         check=True, stdout=subprocess.PIPE).stdout
+            returncode = 0
+        except subprocess.CalledProcessError as e:
+            # output = e.output
+            # returncode = e.returncode
+            print(f"{cmd} {e.returncode} {e.output}")
+
+        # print(f"{locateMeStr}")
+        # print p
+        # <+34.01765757,-118.48244492> +/- 65.00m (speed -1.00 mps / course -1.00) @ 6/7/17, 10:47:33 AM Pacific Daylight Time
 
         child = pexpect.spawn(LocateMeCmd)
         # Wait no more than 20 seconds for result.
@@ -249,7 +260,7 @@ def main():
         if os.path.exists(logfile) and os.path.getsize(logfile):
             """If logfile exists, then compare results, else create this needed logfile"""
             locateMeLog = [line.rstrip('\n') for line in open(logfile)]
-            print(locateMeLog)
+            # print(locateMeLog)
             lat0, lon0 = getLatLong(locateMeLog[0])
             lat, lon = getLatLong(locateMeStr.rstrip('\n'))
             if isclose(lat0, lat) and isclose(lon0, lon):
@@ -260,8 +271,8 @@ def main():
                 address = getAddress(lat, lon)
                 pubip = get_ip()
 
-                #print "New location. Writing new logfile"
-                with open(logfile,"w+") as f:
+                # print "New location. Writing new logfile"
+                with open(logfile, "w+") as f:
                     f.write(str(locateMeStr))
                     f.write("\n")
                     f.write(address)
@@ -274,9 +285,9 @@ def main():
         else:
             """If logfile missing, then create needed logfile"""
             lat, lon = getLatLong(locateMeStr)
-            print(f"{lat},{lon}")
+            # print(f"{lat},{lon}")
             address = getAddress(lat, lon)
-            print(address)
+            # print(address)
             pubip = get_ip()
             pubip += '\n'
             with open(logfile, "w+") as f:
@@ -294,14 +305,15 @@ def main():
         else:
             print(ef.italic + address + rs.italic)
 
-        magicHours(lat, lon)
-
+        # print(lat, lon)
+        magichours(lat, lon)
     else:
         print(fg.red + ef.bold + "Offline" + rs.bold_dim + rs.fg)
         locateMeLog = [line.rstrip('\n') for line in open(logfile)]
 
         address = locateMeLog[1]
         print("Last seen at: %s" % (address))
+
 
 if __name__ == '__main__':
     main()
