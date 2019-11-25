@@ -30,7 +30,7 @@ __author__ = "Buckley Collum"
 __copyright__ = "Copyright 2019, QuoinWorks"
 __credits__ = ["Buckley Collum"]
 __license__ = "GNU General Public License v3.0"
-__version__ = "1.1.0"
+__version__ = "1.1.1"
 __maintainer__ = "Buckley Collum"
 __email__ = "buckleycollum@gmail.com"
 __status__ = "Dev"
@@ -46,8 +46,8 @@ port = {"lpss-serial1": "LPSS Serial Adapter (1)", "lpss-serial2": "LPSS Serial 
         "utun0": "Back To My Mac", "utun1": "Back To My Mac"}
 port_len = max((len(v)) for k, v in port.items())
 
-location = {"Home": ('Home', 'SoCal', 34.0373, -118.3677, 'America/Los_Angeles', 100),
-            "Studio": ('Studio', 'SoCal', 34.0373, -118.3677, 'America/Los_Angeles', 100)
+location = {"🏠 Home": ('Home', 'SoCal', 34.037243, -118.367837, 'America/Los_Angeles', 100),
+            "🎲 Next-Gen Games": ('Next-Gen Games', 'SoCal', 34.048510, -118.357483, 'America/Los_Angeles', 100)
             }
 active_ip = {}
 
@@ -133,7 +133,7 @@ def active():
     primary = netifaces.gateways()['default'][netifaces.AF_INET][1]
     # print(f"primary gateway is {primary}")
     # print(f"active ip is {active_ip[primary]}")
-    print(ef.bold + "%*s: %s" % (port_len, port[primary], active_ip[primary]) + rs.bold_dim)
+    print("%*s: %s" % (port_len, ef.bold + port[primary] + rs.bold_dim, active_ip[primary]))
     active_ip.pop(primary, 0)
     for i in active_ip:
         # print("%*s: %s" % (port_len, port[i], active_ip[i]))
@@ -170,10 +170,23 @@ def getLatLong(locateMeStr):
             return False
 
 
+def knownLocation(latitude, longitude):
+    for key, value in location.items():
+        if distance(latitude,longitude,value[2],value[3]) < 0.2:
+            """within 200 meters"""
+            return key
+        else:
+            return False
+
+
 def getAddress(latitude, longitude):
     import geocoder
-    g = geocoder.geocodefarm([latitude, longitude], method='reverse')
-    return g.address
+    where = knownLocation(latitude,longitude)
+    if where:
+        return where
+    else:
+        g = geocoder.geocodefarm([latitude, longitude], method='reverse')
+        return g.address
 
 
 def isclose(a, b, rel_tol=0.0005, abs_tol=0.0):
@@ -185,6 +198,17 @@ def isclose(a, b, rel_tol=0.0005, abs_tol=0.0):
     So, the default of 0.0005 is about 50 meters.
     """
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
+
+def distance(lat1, lon1, lat2, lon2):
+    from math import cos, asin, sqrt
+    p = 0.017453292519943295        # PI / 180
+    a = 0.5 - cos((lat2-lat1)*p)/2 + cos(lat1*p)*cos(lat2*p) * (1-cos((lon2-lon1)*p)) / 2
+    return 12742 * asin(sqrt(a))    # 2*R*asin...; R = 6371 km
+
+
+def closest(data, v):
+    return min(data, key=lambda p: distance(v['lat'],v['lon'],p['lat'],p['lon']))
 
 
 def magichours(lat, lon):
@@ -200,20 +224,18 @@ def magichours(lat, lon):
         magicHour['blue'].append(start)
         magicHour['blue'].append(end)
     # print(magicHour)
-    print(ef.italic +
-          "Dawn : %s %s %s %s" %
+    print("Dawn : %s %s %s %s" %
           (
               fg.blue + magicHour['blue'][0].strftime("%H:%M:%S") + rs.fg,
               fg.yellow + magicHour['golden'][0].strftime("%H:%M:%S") + rs.fg,
-              fg.red + l.sunrise().strftime("%H:%M:%S") + rs.fg,
+              fg.red + ef.bold + l.sunrise().strftime("🌅 %H:%M:%S") + rs.bold_dim + rs.fg,
               fg.yellow + magicHour['golden'][1].strftime("%H:%M:%S") + rs.fg
           )
-          + rs.italic
           )
-    print("Dusk  : %s %s %s %s" %
+    print("Dusk : %s %s %s %s" %
           (
               fg.yellow + magicHour['golden'][2].strftime("%H:%M:%S") + rs.fg,
-              fg.red + l.sunset().strftime("%H:%M:%S") + rs.fg,
+              fg.red + ef.bold + l.sunset().strftime("🌅 %H:%M:%S") + rs.bold_dim + rs.fg,
               fg.yellow + magicHour['golden'][3].strftime("%H:%M:%S") + rs.fg,
               fg.blue + magicHour['blue'][3].strftime("%H:%M:%S") + rs.fg
           )
@@ -274,7 +296,7 @@ def main():
                 # print "New location. Writing new logfile"
                 with open(logfile, "w+") as f:
                     f.write(str(locateMeStr))
-                    f.write("\n")
+                    # f.write("\n")
                     f.write(address)
                     f.write("\n")
                     f.write(pubip)
@@ -298,12 +320,12 @@ def main():
                 f.write(pubip)
                 f.write("\n")
 
-        print(fg.blue + "%*s: %s" % (port_len, "Public", pubip) + rs.fg)
+        print("%*s: %s" % (port_len, fg.blue + "Public" + rs.fg, pubip))
         if locationChanged:
-            # print(fg.red + ef.bold + address + rs.bold_dim + rs.fg)
-            print(address)
+            print(fg.red + ef.bold + address + rs.bold_dim + rs.fg)
+            # print(address)
         else:
-            print(ef.italic + address + rs.italic)
+            print(ef.italic + ef.bold + address + rs.bold_dim + rs.italic)
 
         # print(lat, lon)
         magichours(lat, lon)
