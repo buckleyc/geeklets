@@ -30,7 +30,7 @@ __author__ = "Buckley Collum"
 __copyright__ = "Copyright 2019, QuoinWorks"
 __credits__ = ["Buckley Collum"]
 __license__ = "GNU General Public License v3.0"
-__version__ = "1.1.1"
+__version__ = "1.1.2"
 __maintainer__ = "Buckley Collum"
 __email__ = "buckleycollum@gmail.com"
 __status__ = "Dev"
@@ -47,7 +47,10 @@ port = {"lpss-serial1": "LPSS Serial Adapter (1)", "lpss-serial2": "LPSS Serial 
 port_len = max((len(v)) for k, v in port.items())
 
 location = {"🏠 Home": ('Home', 'SoCal', 34.037243, -118.367837, 'America/Los_Angeles', 100),
-            "🎲 Next-Gen Games": ('Next-Gen Games', 'SoCal', 34.048510, -118.357483, 'America/Los_Angeles', 100)
+            "🎲 Next-Gen Games": ('Next-Gen Games', 'SoCal', 34.048510, -118.357483, 'America/Los_Angeles', 100),
+            "🏠 Beall House": ('Beall House', 'Georgia', 32.96155872, -83.92609111, 'America/New_York', 100),
+            "🏠 Clarke Sun City": ('Peter & Eleanor', 'Georgia', 30.734546, -97.695169, 'America/Chicago', 100),
+            "🏠 Clarke Ranch": ('Mark & Amy', 'Georgia', 30.693577, -97.867206, 'America/Chicago', 100),
             }
 active_ip = {}
 
@@ -92,11 +95,7 @@ def pub_ip():
     import urllib3
     http = urllib3.PoolManager()
     my_ip = http.request('GET', 'http://ip.42.pl/raw')
-    try:
-        socket.inet_aton(my_ip.data)
-        return my_ip
-    except socket.error:
-        return False
+    return my_ip.data.decode("utf-8")
 
 
 def touch(fname, times=None):
@@ -185,7 +184,13 @@ def getAddress(latitude, longitude):
     if where:
         return where
     else:
-        g = geocoder.geocodefarm([latitude, longitude], method='reverse')
+        try:
+            g = geocoder.geocodefarm([latitude, longitude], method='reverse')
+        except requests.exceptions.RequestException as e:
+            return "Unknown"
+    if g.address == None:
+        return "Bad Request"
+    else:
         return g.address
 
 
@@ -211,10 +216,11 @@ def closest(data, v):
     return min(data, key=lambda p: distance(v['lat'],v['lon'],p['lat'],p['lon']))
 
 
-def magichours(lat, lon):
+def magichours(lat, lon, place):
+    import tzlocal  # $ pip install tzlocal
     import astral
     magicHour = {'golden': [], 'blue': []}
-    l = astral.Location(('Studio', 'SoCal', lat, lon, 'US/Pacific', 100))
+    l = astral.Location(('local', 'local', lat, lon, tzlocal.get_localzone().zone, 100)) # location[place]) #
     astral.solar_depression = 'civil'
     for direction in [astral.SUN_RISING, astral.SUN_SETTING]:
         start, end = l.golden_hour(direction)
@@ -224,22 +230,22 @@ def magichours(lat, lon):
         magicHour['blue'].append(start)
         magicHour['blue'].append(end)
     # print(magicHour)
-    print("Dawn : %s %s %s %s" %
+    print("🌅 : %s %s %s %s" %
           (
               fg.blue + magicHour['blue'][0].strftime("%H:%M:%S") + rs.fg,
               fg.yellow + magicHour['golden'][0].strftime("%H:%M:%S") + rs.fg,
-              fg.red + ef.bold + l.sunrise().strftime("🌅 %H:%M:%S") + rs.bold_dim + rs.fg,
+              fg.red + ef.bold + l.sunrise().strftime("%H:%M:%S") + rs.bold_dim + rs.fg,
               fg.yellow + magicHour['golden'][1].strftime("%H:%M:%S") + rs.fg
           )
-          )
-    print("Dusk : %s %s %s %s" %
+        )
+    print("🌅 : %s %s %s %s" %
           (
               fg.yellow + magicHour['golden'][2].strftime("%H:%M:%S") + rs.fg,
-              fg.red + ef.bold + l.sunset().strftime("🌅 %H:%M:%S") + rs.bold_dim + rs.fg,
+              fg.red + ef.bold + l.sunset().strftime("%H:%M:%S") + rs.bold_dim + rs.fg,
               fg.yellow + magicHour['golden'][3].strftime("%H:%M:%S") + rs.fg,
               fg.blue + magicHour['blue'][3].strftime("%H:%M:%S") + rs.fg
           )
-          )
+        )
 
 
 def main():
@@ -291,6 +297,7 @@ def main():
             if locationChanged:
                 lat, lon = getLatLong(locateMeStr)
                 address = getAddress(lat, lon)
+                print("address is %s" % address)
                 pubip = get_ip()
 
                 # print "New location. Writing new logfile"
@@ -309,7 +316,7 @@ def main():
             lat, lon = getLatLong(locateMeStr)
             # print(f"{lat},{lon}")
             address = getAddress(lat, lon)
-            # print(address)
+            print(address)
             pubip = get_ip()
             pubip += '\n'
             with open(logfile, "w+") as f:
@@ -328,7 +335,7 @@ def main():
             print(ef.italic + ef.bold + address + rs.bold_dim + rs.italic)
 
         # print(lat, lon)
-        magichours(lat, lon)
+        magichours(lat, lon, address)
     else:
         print(fg.red + ef.bold + "Offline" + rs.bold_dim + rs.fg)
         locateMeLog = [line.rstrip('\n') for line in open(logfile)]
