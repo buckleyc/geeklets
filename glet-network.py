@@ -6,22 +6,20 @@ glet-network
 {License_info}
 """
 
+from __future__ import print_function
 # Futures
 from __future__ import unicode_literals
-from __future__ import print_function
 
 # Generic/Built-in
 import os
-
+import re
+import socket
+import subprocess
 # Other Libs
 from typing import List, Any
 
-import socket
-import subprocess
-import re
-from ipify import get_ip
-from sty import fg, bg, ef, rs
 import pexpect
+from sty import fg, ef, rs
 
 # Owned
 # from {path} import {class}
@@ -30,7 +28,7 @@ __author__ = "Buckley Collum"
 __copyright__ = "Copyright 2019, QuoinWorks"
 __credits__ = ["Buckley Collum"]
 __license__ = "GNU General Public License v3.0"
-__version__ = "1.1.2"
+__version__ = "1.1.3"
 __maintainer__ = "Buckley Collum"
 __email__ = "buckleycollum@gmail.com"
 __status__ = "Dev"
@@ -91,7 +89,6 @@ def _load_ips_netifaces():
 
 
 def pub_ip():
-    import socket
     import urllib3
     http = urllib3.PoolManager()
     my_ip = http.request('GET', 'http://ip.42.pl/raw')
@@ -250,6 +247,7 @@ def magichours(lat, lon, place):
 
 def main():
     """main"""
+    verbose = False
     if online():
         """
         Check if location has changed using CoreLocation (via LocateMe)
@@ -297,8 +295,8 @@ def main():
             if locationChanged:
                 lat, lon = getLatLong(locateMeStr)
                 address = getAddress(lat, lon)
-                print("address is %s" % address)
-                pubip = get_ip()
+                # print("address is %s" % address)
+                pubip = pub_ip()
 
                 # print "New location. Writing new logfile"
                 with open(logfile, "w+") as f:
@@ -316,16 +314,20 @@ def main():
             lat, lon = getLatLong(locateMeStr)
             # print(f"{lat},{lon}")
             address = getAddress(lat, lon)
-            print(address)
-            pubip = get_ip()
-            pubip += '\n'
+            pubip = pub_ip()
+            # pubip += '\n'
             with open(logfile, "w+") as f:
                 f.write(str(locateMeStr))
-                f.write("\n")
+                # f.write("\n")
                 f.write(address)
                 f.write("\n")
                 f.write(pubip)
                 f.write("\n")
+
+        if verbose:
+            print("lat,lon = {0:.2f},{1:.2f}".format(lat, lon))
+            print("address = {0:s}".format(address))
+            print("pubip = {0:s}".format(pubip))
 
         print("%*s: %s" % (port_len, fg.blue + "Public" + rs.fg, pubip))
         if locationChanged:
