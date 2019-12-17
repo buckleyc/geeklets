@@ -227,23 +227,28 @@ def magichours(lat, lon, place):
         magicHour['blue'].append(start)
         magicHour['blue'].append(end)
     # print(magicHour)
-    print("🌅 : %s %s %s %s" %
-          (
-              fg.blue + magicHour['blue'][0].strftime("%H:%M:%S") + rs.fg,
-              fg.yellow + magicHour['golden'][0].strftime("%H:%M:%S") + rs.fg,
-              fg.red + ef.bold + l.sunrise().strftime("%H:%M:%S") + rs.bold_dim + rs.fg,
-              fg.yellow + magicHour['golden'][1].strftime("%H:%M:%S") + rs.fg
-          )
+    morning = ("%s %s %s %s" %
+        (
+            fg.blue + magicHour['blue'][0].strftime("%H:%M:%S") + rs.fg,
+            fg.yellow + magicHour['golden'][0].strftime("%H:%M:%S") + rs.fg,
+            fg.red + ef.bold + l.sunrise().strftime("%H:%M:%S") + rs.bold_dim + rs.fg,
+            fg.yellow + magicHour['golden'][1].strftime("%H:%M:%S") + rs.fg
         )
-    print("🌅 : %s %s %s %s" %
-          (
-              fg.yellow + magicHour['golden'][2].strftime("%H:%M:%S") + rs.fg,
-              fg.red + ef.bold + l.sunset().strftime("%H:%M:%S") + rs.bold_dim + rs.fg,
-              fg.yellow + magicHour['golden'][3].strftime("%H:%M:%S") + rs.fg,
-              fg.blue + magicHour['blue'][3].strftime("%H:%M:%S") + rs.fg
-          )
+    )
+    evening = ("%s %s %s %s" %
+        (
+            fg.yellow + magicHour['golden'][2].strftime("%H:%M:%S") + rs.fg,
+            fg.red + ef.bold + l.sunset().strftime("%H:%M:%S") + rs.bold_dim + rs.fg,
+            fg.yellow + magicHour['golden'][3].strftime("%H:%M:%S") + rs.fg,
+            fg.blue + magicHour['blue'][3].strftime("%H:%M:%S") + rs.fg
         )
-
+    )
+    dawn = f"🌅 : {morning}"
+    dusk = f"🌅 : {evening}"
+    fullday = (
+        f"{morning} - {evening}"
+    )
+    print(fullday)
 
 def main():
     """main"""
@@ -325,9 +330,12 @@ def main():
                 f.write("\n")
 
         if verbose:
-            print("lat,lon = {0:.2f},{1:.2f}".format(lat, lon))
-            print("address = {0:s}".format(address))
-            print("pubip = {0:s}".format(pubip))
+            message = (
+                f"lat,lon = {lat:.2f},{lon:.2f}\n"
+                f"address = {address}\n"
+                f"pubip = {pubip}\n"
+            )
+            print(message)
 
         print("%*s: %s" % (port_len, fg.blue + "Public" + rs.fg, pubip))
         if locationChanged:
