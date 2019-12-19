@@ -64,10 +64,7 @@ def main():
     try:
         locateMeStr = subprocess.run(cmd, encoding='utf-8',
                                      check=True, stdout=subprocess.PIPE).stdout
-        returncode = 0
     except subprocess.CalledProcessError as e:
-        # output = e.output
-        # returncode = e.returncode
         print(f"{cmd} {e.returncode} {e.output}")
 
     child = pexpect.spawn(cmd)
