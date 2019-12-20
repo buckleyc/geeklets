@@ -11,9 +11,10 @@ from __future__ import unicode_literals
 
 # Generic/Built-in
 import re
+import sys
 import subprocess
-import pexpect
 import datetime
+import pexpect
 
 # Other Libs
 from typing import Any, Union
@@ -51,7 +52,6 @@ def get_lat_lon(mylocation):
     for line in iter(str(mylocation).splitlines()):
         match = re.search(pattern, line)
         if match:
-            new_line = match.group()  # + '\n'
             latitude = float(match.group(1))
             longitude = float(match.group(2))
             return latitude, longitude
@@ -62,33 +62,24 @@ def get_lat_lon(mylocation):
 def main():
     cmd = '/Users/buckley/bin/LocateMe'
     try:
-        locateMeStr = subprocess.run(cmd, encoding='utf-8',
-                                     check=True, stdout=subprocess.PIPE).stdout
+        locate_me_str = subprocess.run(cmd, encoding='utf-8',
+                                       check=True, stdout=subprocess.PIPE).stdout
     except subprocess.CalledProcessError as e:
-        print(f"{cmd} {e.returncode} {e.output}")
+        print(f'{cmd} {e.returncode} {e.output}', file=sys.stderr)
+        sys.exit(e)
 
-    child = pexpect.spawn(cmd)
-    # Wait no more than 20 seconds for result.
-    try:
-        cexpect = child.expect('\<([+-]?[\d.]+),([+-]?[\d.]+)\>.*', timeout=20)
-    except pexpect.TIMEOUT:
-        print("LocateMe error. Timeout. Skipping")
-    except pexpect.EOF:
-        print("LocateMe error. EOF. Skipping")
-
-    lat, lon = get_lat_lon(locateMeStr.rstrip('\n'))
+    lat, lon = get_lat_lon(locate_me_str.rstrip('\n'))
 
     # print(f"{lat},{lon}")
 
-    when = datetime.datetime.now()
-
+    adjustment: datetime.timedelta = datetime.timedelta(hours=24)
+    when: datetime.datetime = datetime.datetime.now() + adjustment
     mi = pylunar.MoonInfo(dd2dms(lat), dd2dms(lon))
     mi.update(datetime.date.timetuple(when)[0:6])
-    age = mi.age()
-    phase = mi.fractional_phase()
+
     phase_name = mi.phase_name().replace("_", " ").title()
 
-    print(f"The {phase_name} Moon is at {phase:.0%} and is {age:.1f} days old.")
+    print(f'The {phase_name} Moon is at {mi.fractional_phase():.0%} and is {mi.age():.1f} days old.')
 
 
 if __name__ == '__main__':
