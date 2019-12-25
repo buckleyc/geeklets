@@ -60,7 +60,7 @@ def get_lat_lon(mylocation):
 
 
 def main():
-    cmd = '/Users/buckley/bin/LocateMe'
+    cmd = "/Users/buckley/bin/LocateMe"
     try:
         locate_me_str = subprocess.run(cmd, encoding='utf-8',
                                        check=True, stdout=subprocess.PIPE).stdout
@@ -72,7 +72,8 @@ def main():
 
     # print(f"{lat},{lon}")
 
-    adjustment: datetime.timedelta = datetime.timedelta(hours=24)
+    #
+    adjustment: datetime.timedelta = datetime.timedelta(hours=20)
     when: datetime.datetime = datetime.datetime.now() + adjustment
     mi = pylunar.MoonInfo(dd2dms(lat), dd2dms(lon))
     mi.update(datetime.date.timetuple(when)[0:6])
