@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python3.8
 # -*- coding: utf-8 -*-
 
 """
@@ -28,7 +28,7 @@ __author__ = "Buckley Collum"
 __copyright__ = "Copyright 2019, QuoinWorks"
 __credits__ = ["Buckley Collum"]
 __license__ = "GNU General Public License v3.0"
-__version__ = "1.1.3"
+__version__ = "1.1.4"
 __maintainer__ = "Buckley Collum"
 __email__ = "buckleycollum@gmail.com"
 __status__ = "Dev"
@@ -169,7 +169,7 @@ def getLatLong(locateMeStr):
 def knownLocation(latitude, longitude):
     for key, value in location.items():
         if distance(latitude,longitude,value[2],value[3]) < 0.2:
-            """within 200 meters"""
+            """within 0.2 kilometers"""
             return key
         else:
             return False
@@ -181,6 +181,7 @@ def getAddress(latitude, longitude):
     if where:
         return where
     else:
+        import requests
         try:
             g = geocoder.geocodefarm([latitude, longitude], method='reverse')
         except requests.exceptions.RequestException as e:
@@ -203,10 +204,14 @@ def isclose(a, b, rel_tol=0.0005, abs_tol=0.0):
 
 
 def distance(lat1, lon1, lat2, lon2):
-    from math import cos, asin, sqrt
-    p = 0.017453292519943295        # PI / 180
-    a = 0.5 - cos((lat2-lat1)*p)/2 + cos(lat1*p)*cos(lat2*p) * (1-cos((lon2-lon1)*p)) / 2
-    return 12742 * asin(sqrt(a))    # 2*R*asin...; R = 6371 km
+    import math
+    p = math.pi / 180 # 0.017453292519943295        # PI / 180
+    a = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p)*math.cos(lat2*p) * (1-math.cos((lon2-lon1)*p)) / 2
+    radius_equator = 6378.0
+    radius_pole = 6357.0
+    radius_avg = radius_equator - math.sin((lat2-lat1)/2.0)*(radius_equator-radius_pole)
+    # print(f"average radius is {radius_avg:.2f} km")
+    return (2.0 * radius_avg) * math.asin(math.sqrt(a))    # 2*R*asin...; R = 6371 km
 
 
 def closest(data, v):
@@ -265,21 +270,21 @@ def main():
         #    for ip in myips:
         #        print(u" Ethernet IP : %s" % (ip))
 
-        LocateMeCmd = '/Users/buckley/bin/LocateMe'
+        locate_me_cmd = '/Users/buckley/bin/LocateMe'
         try:
-            locateMeStr = subprocess.run(LocateMeCmd, encoding='utf-8',
+            locate_me_str = subprocess.run(locate_me_cmd, encoding='utf-8',
                                          check=True, stdout=subprocess.PIPE).stdout
             returncode = 0
         except subprocess.CalledProcessError as e:
             # output = e.output
             # returncode = e.returncode
-            print(f"{cmd} {e.returncode} {e.output}")
+            print(f"{locate_me_cmd} {e.returncode} {e.output}")
 
         # print(f"{locateMeStr}")
         # print p
         # <+34.01765757,-118.48244492> +/- 65.00m (speed -1.00 mps / course -1.00) @ 6/7/17, 10:47:33 AM Pacific Daylight Time
 
-        child = pexpect.spawn(LocateMeCmd)
+        child = pexpect.spawn(locate_me_cmd)
         # Wait no more than 20 seconds for result.
         try:
             cexpect = child.expect('\<([+-]?[\d.]+),([+-]?[\d.]+)\>.*', timeout=20)
@@ -293,19 +298,20 @@ def main():
             locateMeLog = [line.rstrip('\n') for line in open(logfile)]
             # print(locateMeLog)
             lat0, lon0 = getLatLong(locateMeLog[0])
-            lat, lon = getLatLong(locateMeStr.rstrip('\n'))
+            lat, lon = getLatLong(locate_me_str.rstrip('\n'))
+            # print(f"moved {distance(lat0,lon0,lat,lon)*1000:.1f} meters")
             if isclose(lat0, lat) and isclose(lon0, lon):
                 locationChanged = False
 
             if locationChanged:
-                lat, lon = getLatLong(locateMeStr)
+                lat, lon = getLatLong(locate_me_str)
                 address = getAddress(lat, lon)
                 # print("address is %s" % address)
                 pubip = pub_ip()
 
                 # print "New location. Writing new logfile"
                 with open(logfile, "w+") as f:
-                    f.write(str(locateMeStr))
+                    f.write(str(locate_me_str))
                     # f.write("\n")
                     f.write(address)
                     f.write("\n")
@@ -316,13 +322,13 @@ def main():
                 pubip = locateMeLog[2]
         else:
             """If logfile missing, then create needed logfile"""
-            lat, lon = getLatLong(locateMeStr)
+            lat, lon = getLatLong(locate_me_str)
             # print(f"{lat},{lon}")
             address = getAddress(lat, lon)
             pubip = pub_ip()
             # pubip += '\n'
             with open(logfile, "w+") as f:
-                f.write(str(locateMeStr))
+                f.write(str(locate_me_str))
                 # f.write("\n")
                 f.write(address)
                 f.write("\n")
