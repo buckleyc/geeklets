@@ -10,6 +10,8 @@ pexpect = "*"
 sty = "*"
 netifaces = "*"
 tzlocal = "*"
+urllib3 = "*"
+astral = "*"
 
 [requires]
 python_version = "3.8"

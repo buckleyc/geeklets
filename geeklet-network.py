@@ -28,7 +28,7 @@ __author__ = "Buckley Collum"
 __copyright__ = "Copyright 2019, QuoinWorks"
 __credits__ = ["Buckley Collum"]
 __license__ = "GNU General Public License v3.0"
-__version__ = "1.1.4"
+__version__ = "1.1.5"
 __maintainer__ = "Buckley Collum"
 __email__ = "buckleycollum@gmail.com"
 __status__ = "Dev"
@@ -88,6 +88,17 @@ def _load_ips_netifaces():
     # PUBLIC_IPS[:] = _uniq_stable(public_ips)
 
 
+def vpn_enabled():
+    import netifaces as ni
+    # print(f"{ni.interfaces()}")
+    for iface in ni.interfaces():
+        addrinfo = ni.ifaddresses(iface)
+        # print(f"{addrinfo}")
+        if "utun" in iface and ni.AF_INET in addrinfo:
+            return "🔒"  # ni.ifaddresses(iface)[ni.AF_INET][0]['addr']
+    return "🔓"
+
+
 def pub_ip():
     import urllib3
     http = urllib3.PoolManager()
@@ -145,7 +156,7 @@ def online():
         return False
 
 
-def locationChange():
+def location_changed():
     ip_count = len(_load_ips_netifaces())
     if ip_count:
         return True
@@ -153,7 +164,7 @@ def locationChange():
         return False
 
 
-def getLatLong(locateMeStr):
+def get_lat_lon(locateMeStr):
     pattern = "\<([+-]?[\d.]+),([+-]?[\d.]+)\>\s+\+\/\-\s([\d.]+m)\s\(.*\)\s\@\s([\d\/]+),\s([\d:]+ [AP]M)\s([\w ]+)"
     for line in iter(str(locateMeStr).splitlines()):
         match = re.search(pattern, line)
@@ -166,7 +177,7 @@ def getLatLong(locateMeStr):
             return False
 
 
-def knownLocation(latitude, longitude):
+def known_location(latitude, longitude):
     for key, value in location.items():
         if distance(latitude,longitude,value[2],value[3]) < 0.2:
             """within 0.2 kilometers"""
@@ -175,9 +186,9 @@ def knownLocation(latitude, longitude):
             return False
 
 
-def getAddress(latitude, longitude):
+def get_address(latitude, longitude):
     import geocoder
-    where = knownLocation(latitude,longitude)
+    where = known_location(latitude, longitude)
     if where:
         return where
     else:
@@ -255,6 +266,7 @@ def magichours(lat, lon, place):
     )
     print(fullday)
 
+
 def main():
     """main"""
     verbose = False
@@ -266,6 +278,7 @@ def main():
         print(fg.green + ef.bold + ef.underl + "Online" + rs.fg + rs.underl + rs.bold_dim)
         port_len = active()
         locationChanged = True
+
         #    myips = _load_ips_netifaces()
         #    for ip in myips:
         #        print(u" Ethernet IP : %s" % (ip))
@@ -297,15 +310,15 @@ def main():
             """If logfile exists, then compare results, else create this needed logfile"""
             locateMeLog = [line.rstrip('\n') for line in open(logfile)]
             # print(locateMeLog)
-            lat0, lon0 = getLatLong(locateMeLog[0])
-            lat, lon = getLatLong(locate_me_str.rstrip('\n'))
+            lat0, lon0 = get_lat_lon(locateMeLog[0])
+            lat, lon = get_lat_lon(locate_me_str.rstrip('\n'))
             # print(f"moved {distance(lat0,lon0,lat,lon)*1000:.1f} meters")
             if isclose(lat0, lat) and isclose(lon0, lon):
                 locationChanged = False
 
             if locationChanged:
-                lat, lon = getLatLong(locate_me_str)
-                address = getAddress(lat, lon)
+                lat, lon = get_lat_lon(locate_me_str)
+                address = get_address(lat, lon)
                 # print("address is %s" % address)
                 pubip = pub_ip()
 
@@ -322,9 +335,9 @@ def main():
                 pubip = locateMeLog[2]
         else:
             """If logfile missing, then create needed logfile"""
-            lat, lon = getLatLong(locate_me_str)
+            lat, lon = get_lat_lon(locate_me_str)
             # print(f"{lat},{lon}")
-            address = getAddress(lat, lon)
+            address = get_address(lat, lon)
             pubip = pub_ip()
             # pubip += '\n'
             with open(logfile, "w+") as f:
@@ -343,7 +356,7 @@ def main():
             )
             print(message)
 
-        print("%*s: %s" % (port_len, fg.blue + "Public" + rs.fg, pubip))
+        print("%*s: %s %s" % (port_len, fg.blue + "Public" + rs.fg, vpn_enabled(), pubip))
         if locationChanged:
             print(fg.red + ef.bold + address + rs.bold_dim + rs.fg)
             # print(address)
