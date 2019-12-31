@@ -12,6 +12,7 @@ netifaces = "*"
 tzlocal = "*"
 urllib3 = "*"
 astral = "*"
+pylunar = "*"
 
 [requires]
 python_version = "3.8"

@@ -10,11 +10,10 @@ mooninfo.py
 from __future__ import unicode_literals
 
 # Generic/Built-in
-import re
-import sys
-import subprocess
 import datetime
-import pexpect
+import re
+import subprocess
+import sys
 
 # Other Libs
 from typing import Any, Union
