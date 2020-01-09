@@ -13,6 +13,7 @@ tzlocal = "*"
 urllib3 = "*"
 astral = "*"
 pylunar = "*"
+requests = "*"
 
 [requires]
 python_version = "3.8"

@@ -28,7 +28,7 @@ __author__ = "Buckley Collum"
 __copyright__ = "Copyright 2019, QuoinWorks"
 __credits__ = ["Buckley Collum"]
 __license__ = "GNU General Public License v3.0"
-__version__ = "1.1.5"
+__version__ = "1.1.7"
 __maintainer__ = "Buckley Collum"
 __email__ = "buckleycollum@gmail.com"
 __status__ = "Dev"
@@ -39,7 +39,8 @@ pattern = "\<([+-]?[\d.]+),([+-]?[\d.]+)\>\s+\+\/\-\s([\d.]+m)\s\(.*\)\s\@\s([\d
 port = {"lpss-serial1": "LPSS Serial Adapter (1)", "lpss-serial2": "LPSS Serial Adapter (2)", "fw0": "Display Firewire",
         "en0": "Wi-Fi", "en1": "Thunderbolt 1", "en2": "Thunderbolt 1", "en3": "Thunderbolt 13",
         "en4": "Thunderbolt 14",
-        "en6": "Bluetooth PAN", "en9": "Display Ethernet", "bridge0": "Thunderbolt Bridge", "lo0": "loopback",
+        "en6": "Bluetooth PAN", "en7": "iPhone USB", "en9": "Display Ethernet",
+        "bridge0": "Thunderbolt Bridge", "lo0": "loopback",
         "ppp0": "VPN",
         "utun0": "Back To My Mac", "utun1": "Back To My Mac"}
 port_len = max((len(v)) for k, v in port.items())
@@ -99,11 +100,33 @@ def vpn_enabled():
     return "🔓"
 
 
-def pub_ip():
+def pub_ip3():
+    import requests
+    import re
+    url = "http://checkip.dyndns.org"
+    resp = requests.get(url)
+    my_ip = re.findall(r"\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}", resp.text)
+    return my_ip[0] # .data.decode("utf-8")
+
+
+def pub_ip2():
     import urllib3
+    url = "http://ip.42.pl/raw"
     http = urllib3.PoolManager()
-    my_ip = http.request('GET', 'http://ip.42.pl/raw')
+    my_ip = http.request('GET', url)
     return my_ip.data.decode("utf-8")
+
+
+def pub_ip(inet6=False):
+    from requests import get
+    # Check if IPv4 or IPv6
+    # Thank you, Randall Degges, https://github.com/rdegges
+    if inet6:
+        url = "https://api6.ipify.org"
+    else:
+        url = "https://api.ipify.org"
+    ip = get(url).text
+    return ip
 
 
 def touch(fname, times=None):
@@ -332,7 +355,7 @@ def main():
                     f.write("\n")
             else:
                 address = locateMeLog[1]
-                pubip = locateMeLog[2]
+                pubip = pub_ip() # locateMeLog[2]
         else:
             """If logfile missing, then create needed logfile"""
             lat, lon = get_lat_lon(locate_me_str)
