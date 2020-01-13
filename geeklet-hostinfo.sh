@@ -9,11 +9,6 @@ if command -v defaults >/dev/null 2>&1 ; then
   echo "${when}"
 fi
 
-if command -v system_profiler >/dev/null 2>&1 ; then
-  # SPHardwareDataType
-  system_profiler SPHardwareDataType | sed -e '/^\s*$/d' -e 's/^[ \t]*//' | tail +3
-fi
-
 if command -v sysctl >/dev/null 2>&1 ; then
   model=$(sysctl -n hw.model)
   cpu_brand_string=$(sysctl -n machdep.cpu.brand_string)
@@ -28,5 +23,10 @@ if command -v sysctl >/dev/null 2>&1 ; then
   echo ${kernel} | cut -f1 -d":"
   osproductversion=$(sysctl -n kern.osproductversion)
   echo "Mac OS X ${osproductversion}"
+fi
+
+if command -v system_profiler >/dev/null 2>&1 ; then
+  # SPHardwareDataType
+  system_profiler SPHardwareDataType | sed -e '/^\s*$/d' -e 's/^[ \t]*//' | tail +3
 fi
 
