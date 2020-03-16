@@ -33,7 +33,7 @@ def main():
     else:
         address = f"{where}"
 
-    print(f"{address}")
+    # print(f"{address}")
     """main"""
     verbose = False
     if g.online():
@@ -46,9 +46,8 @@ def main():
         )
         port_len = g.active()
         pubip = g.pub_ip()
-        locationChanged = False
 
-        g.log_coordinates(locate_me_str)
+        # g.log_coordinates(locate_me_str)
 
         if verbose:
             message = (
@@ -62,11 +61,12 @@ def main():
             "%*s: %s %s"
             % (port_len, fg.blue + "Public" + rs.fg, g.vpn_enabled(), pubip)
         )
-        if locationChanged:
-            print(fg.red + ef.bold + address + rs.bold_dim + rs.fg)
-            # print(address)
-        else:
-            print(ef.italic + ef.bold + address + rs.bold_dim + rs.italic)
+
+        # if g.location_changed():
+        #     print(fg.red + ef.bold + address + rs.bold_dim + rs.fg)
+        #     # print(address)
+        # else:
+        #     print(ef.italic + ef.bold + address + rs.bold_dim + rs.italic)
 
         # print(lat, lon)
 

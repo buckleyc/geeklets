@@ -158,9 +158,9 @@ def online():
 
 def touch(fname, times=None):
     """
-	Emulates the 'touch' command by creating the file at *fname* if it does not
-	exist.  If the file exist its modification time will be updated.
-	"""
+    Emulates the 'touch' command by creating the file at *fname* if it does not
+    exist.  If the file exist its modification time will be updated.
+    """
     import os
     import io
 
@@ -201,12 +201,23 @@ def pub_ip(inet6=False):
 
 
 def location_changed():
-    ip_count = len(_load_ips_netifaces())
-    if ip_count:
-        return True
-    else:
-        return False
+    import os
+    locationChanged = True
 
+    if os.path.exists(logfile) and os.path.getsize(logfile):
+        """If logfile exists, then compare results, else create this needed logfile"""
+        locateMeLog = [line.rstrip("\n") for line in open(logfile)]
+        lat0, lon0 = get_lat_lon(locateMeLog[0])
+        lat, lon = get_lat_lon(locate_me())
+        # print(f"moved {distance(lat0,lon0,lat,lon)*1000:.1f} meters")
+        if isclose(lat0, lat) and isclose(lon0, lon):
+            locationChanged = False
+        else:
+            locationChanged = True
+    else:
+        locationChanged = True
+
+    return locationChanged
 
 def get_lat_lon(locateMeStr):
     pattern = "\<([+-]?[\d.]+),([+-]?[\d.]+)\>\s+\+\/\-\s([\d.]+m)\s\(.*\)\s\@\s([\d\/]+),\s([\d:]+ [AP]M)\s([\w ]+)"
@@ -251,12 +262,12 @@ def get_address(latitude, longitude):
 
 def isclose(a, b, rel_tol=0.0005, abs_tol=0.0):
     """
-	Comparing for approximately the same location.
-	from https://en.wikipedia.org/wiki/Decimal_degrees:
-		decimal-degrees	DMS	            qualitative scale that can be identified    at equator  E/W at 23N/S
-		0.0001          0° 00′ 0.36″	individual street, land parcel	            11.132 m	10.247 m
-	So, the default of 0.0005 is about 50 meters.
-	"""
+    Comparing for approximately the same location.
+    from https://en.wikipedia.org/wiki/Decimal_degrees:
+        decimal-degrees	DMS	            qualitative scale that can be identified    at equator  E/W at 23N/S
+        0.0001          0° 00′ 0.36″	individual street, land parcel	            11.132 m	10.247 m
+    So, the default of 0.0005 is about 50 meters.
+    """
     return abs(a - b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
 
 
@@ -340,21 +351,14 @@ def update_log(linenumber=0, line_update=""):
 def log_coordinates(locate_me_str):
     import os
 
-    locationChanged = True
     if os.path.exists(logfile) and os.path.getsize(logfile):
         """If logfile exists, then compare results, else create this needed logfile"""
-        locateMeLog = [line.rstrip("\n") for line in open(logfile)]
-        lat0, lon0 = get_lat_lon(locateMeLog[0])
-        lat, lon = get_lat_lon(locate_me_str)
-        # print(f"moved {distance(lat0,lon0,lat,lon)*1000:.1f} meters")
-        if isclose(lat0, lat) and isclose(lon0, lon):
-            locationChanged = False
-
-        if locationChanged:
+        if location_changed():
             # address = get_address(lat, lon)
             # print("address is %s" % address)
             update_log(0)
         else:
+            locateMeLog = [line.rstrip("\n") for line in open(logfile)]
             # address = locateMeLog[1]
             pubip = pub_ip()
             if pubip != locateMeLog[2]:
