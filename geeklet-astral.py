@@ -100,13 +100,13 @@ def magichours(lat, lon, place):
         fg.blue + magicHour["blue"][3].strftime("%H:%M:%S") + rs.fg,
     )
     dawn = f"🌅 : {morning}"
-    dusk = f"🌅 : {evening}"
+    dusk = f"🌅 : \t\t    {evening}"
 
     luna = f"{phase_string(moon.phase(today))} moon"
     jc = sun.jday_to_jcentury(sun.julianday(today))
     srta = sun.sun_rt_ascension(jc)
     sdec = sun.sun_declination(jc)
-    fullday = f"{dawn} - {dusk}"
+    fullday = f"{dawn}\n{dusk}"
     # print( "at %s" % place )
     print(fullday)
     print(luna.title())

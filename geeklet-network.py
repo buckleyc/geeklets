@@ -62,13 +62,11 @@ def main():
             % (port_len, fg.blue + "Public" + rs.fg, g.vpn_enabled(), pubip)
         )
 
-        # if g.location_changed():
-        #     print(fg.red + ef.bold + address + rs.bold_dim + rs.fg)
-        #     # print(address)
-        # else:
-        #     print(ef.italic + ef.bold + address + rs.bold_dim + rs.italic)
+        if g.location_changed():
+            print(fg.red + ef.bold + address + rs.bold_dim + rs.fg)
+        else:
+            print(ef.italic + ef.bold + address + rs.bold_dim + rs.italic)
 
-        # print(lat, lon)
 
     else:
         print(fg.red + ef.bold + "Offline" + rs.bold_dim + rs.fg)
